@@ -36,8 +36,8 @@ def main():
 
     province = sys.argv[1]
 
-    votes_2019 = load_election_results("election43_table11.csv", province)
-    votes_2021 = load_election_results("election44_table11.csv", province)
+    votes_2019 = load_election_results("data/election43_table11.csv", province)
+    votes_2021 = load_election_results("data/election44_table11.csv", province)
 
     winner_2019 = find_winner(votes_2019)
     winner_2021 = find_winner(votes_2021)
