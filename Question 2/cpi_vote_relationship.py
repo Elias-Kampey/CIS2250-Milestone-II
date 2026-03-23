@@ -2,7 +2,7 @@
 '''
   Author(s): Rushi Patel 1374939
 
-  Project: CIS2250 Term Project Milestone III | 
+  Project: CIS2250 Term Project Milestone III 
   Question:How does the change in the Consumer Price Index (CPI) in each province between 
   2019 and 2021 relate to changes in federal election vote share for major political parties?
   Date of Last Update: March 23, 2026.
