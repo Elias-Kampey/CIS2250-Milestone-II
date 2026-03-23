@@ -120,7 +120,7 @@ def load_cpi_files(provinces):
 
     for year in years:
         for month in months:
-            filename = "CPI" + year + "-" + month + ".csv"
+            filename = "data/CPI" + year + "-" + month + ".csv"
 
             try:
                 file_data = load_csv(filename)
@@ -234,8 +234,8 @@ def main(argv):
     if len(argv) != 1:
         fatal("Usage: python summarize.py")
 
-    election2019 = load_csv("43thelection.csv")
-    election2021 = load_csv("44thelection.csv")
+    election2019 = load_csv("data/43thelection.csv")
+    election2021 = load_csv("data/44thelection.csv")
 
     provinces = get_provinces(election2019)
     parties = get_parties(election2019)
