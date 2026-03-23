@@ -29,7 +29,7 @@ def fatal(msg: str) -> None:
     sys.exit(1)
 
 
-# Loads processed data (final_data.csv) into a list of dictionaries
+# Loads processed data (final_data.csv)
 def load_data(filename: str) -> list[dict]:
     data = []
 
@@ -111,7 +111,7 @@ def create_plot(x_vals, y_vals, labels, party):
 
     colors = []
 
-    # Assign colors: green = gain, red = loss
+    # Assign colours: green = gain, red = loss
     for val in y_vals:
         if val >= 0:
             colors.append("green")
