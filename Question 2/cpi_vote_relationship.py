@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 '''
-summarize.py
   Author(s): Rushi Patel 1374939
 
   Project: CIS2250 Term Project Milestone III | 
