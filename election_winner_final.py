@@ -15,7 +15,6 @@ wins in that province.
 """
 
 import csv
-import re
 import sys
 import unicodedata
 
@@ -23,199 +22,104 @@ FILE_2019 = "data/election43_table11.csv"
 FILE_2021 = "data/election44_table11.csv"
 
 
-def normalize_text(text):
-    """Normalize text so province matching works with accents and punctuation."""
-    if text is None:
-        return ""
-
-    text = text.strip()
-    text = unicodedata.normalize("NFKD", text)
-    text = text.encode("ascii", "ignore").decode("ascii")
-    text = text.lower()
-
-    text = text.replace("&", "and")
-    text = text.replace("-", " ")
-    text = text.replace("/", " ")
-    text = re.sub(r"[^a-z0-9 ]", " ", text)
-    text = re.sub(r"\s+", " ", text).strip()
-
-    return text
+def normalize_province(name):
+    name = name.strip().lower()
+    name = unicodedata.normalize("NFKD", name)
+    name = name.encode("ascii", "ignore").decode("ascii")
+    return name
 
 
-def province_aliases():
-    """Common aliases and abbreviations for Canadian provinces/territories."""
-    return {
-        "ab": "Alberta",
-        "bc": "British Columbia",
-        "mb": "Manitoba",
-        "nb": "New Brunswick",
-        "nl": "Newfoundland and Labrador",
-        "newfoundland": "Newfoundland and Labrador",
-        "newfoundland labrador": "Newfoundland and Labrador",
-        "nfld": "Newfoundland and Labrador",
-        "nt": "Northwest Territories",
-        "ns": "Nova Scotia",
-        "nu": "Nunavut",
-        "on": "Ontario",
-        "ont": "Ontario",
-        "pe": "Prince Edward Island",
-        "pei": "Prince Edward Island",
-        "qc": "Quebec",
-        "pq": "Quebec",
-        "quebec": "Quebec",
-        "sk": "Saskatchewan",
-        "yt": "Yukon",
-    }
-
-
-def extract_english_province(raw_province):
-    """Table 11 stores province names as English/French. Use the English part."""
-    return raw_province.split("/")[0].strip()
-
-
-def extract_party(candidate_field):
-    """Extract the winning party from the elected candidate field."""
-    if "Bloc Québécois" in candidate_field:
+def get_party(candidate):
+    if "Bloc Québécois" in candidate:
         return "Bloc Quebecois"
-    if "NDP-New Democratic Party" in candidate_field or "New Democratic Party" in candidate_field:
+    elif "New Democratic Party" in candidate or "NDP-New Democratic Party" in candidate:
         return "New Democratic Party"
-    if "Green Party" in candidate_field:
+    elif "Green Party" in candidate:
         return "Green Party"
-    if "Liberal/" in candidate_field:
+    elif "Liberal/" in candidate:
         return "Liberal Party"
-    if "Conservative/" in candidate_field:
+    elif "Conservative/" in candidate:
         return "Conservative Party"
-    if "Independent/" in candidate_field:
+    elif "Independent/" in candidate:
         return "Independent"
-
-    return "Unknown"
-
-
-def build_province_lookup(filename):
-    """Create a lookup so user input can match valid province names."""
-    lookup = {}
-    with open(filename, newline="", encoding="utf-8-sig") as file:
-        reader = csv.DictReader(file)
-        for row in reader:
-            province = extract_english_province(row["Province"])
-            lookup[normalize_text(province)] = province
-
-    for alias, province in province_aliases().items():
-        lookup[normalize_text(alias)] = province
-
-    return lookup
+    else:
+        return "Unknown"
 
 
-def resolve_province(user_input, lookup):
-    """Resolve user input to a canonical province name."""
-    key = normalize_text(user_input)
-    return lookup.get(key)
-
-
-def load_party_wins_by_province(filename, selected_province):
-    """
-    Count how many ridings each party won in the selected province.
-    Returns a dictionary like:
-    {
-        "Liberal Party": 35,
-        "Bloc Quebecois": 32,
-        ...
-    }
-    """
+def count_party_wins(filename, selected_province):
     party_wins = {}
 
     with open(filename, newline="", encoding="utf-8-sig") as file:
         reader = csv.DictReader(file)
 
         for row in reader:
-            province = extract_english_province(row["Province"])
-            if province != selected_province:
-                continue
+            province_in_file = row["Province"].split("/")[0].strip()
 
-            party = extract_party(row["Elected Candidate/Candidat élu"])
-            party_wins[party] = party_wins.get(party, 0) + 1
+            if normalize_province(province_in_file) == normalize_province(selected_province):
+                candidate = row["Elected Candidate/Candidat élu"]
+                party = get_party(candidate)
+
+                if party in party_wins:
+                    party_wins[party] += 1
+                else:
+                    party_wins[party] = 1
 
     return party_wins
 
 
-def find_winner(party_wins):
-    """Return the party with the most riding wins."""
-    if not party_wins:
-        return None
+def get_winner(party_wins):
+    winner = None
+    max_seats = -1
 
-    max_wins = max(party_wins.values())
-    winners = [party for party, wins in party_wins.items() if wins == max_wins]
+    for party in party_wins:
+        if party_wins[party] > max_seats:
+            max_seats = party_wins[party]
+            winner = party
 
-    if len(winners) == 1:
-        return winners[0]
-
-    return "Tie: " + ", ".join(sorted(winners))
+    return winner
 
 
-def print_party_table(party_wins_2019, party_wins_2021):
-    """Print a clean comparison table."""
-    all_parties = sorted(set(party_wins_2019) | set(party_wins_2021))
+def print_table(wins_2019, wins_2021):
+    parties = sorted(set(wins_2019.keys()) | set(wins_2021.keys()))
 
-    header_party = "Party"
-    header_2019 = "2019 Seats"
-    header_2021 = "2021 Seats"
+    print("+------------------------+------------+------------+")
+    print("| Party                  | 2019 Seats | 2021 Seats |")
+    print("+------------------------+------------+------------+")
 
-    party_width = max(len(header_party), max(len(p) for p in all_parties))
-    width_2019 = len(header_2019)
-    width_2021 = len(header_2021)
+    for party in parties:
+        seats_2019 = wins_2019.get(party, 0)
+        seats_2021 = wins_2021.get(party, 0)
+        print(f"| {party:<22} | {seats_2019:>10} | {seats_2021:>10} |")
 
-    line = (
-        f"+-{'-' * party_width}-+-{'-' * width_2019}-+-{'-' * width_2021}-+"
-    )
-
-    print(line)
-    print(
-        f"| {header_party:<{party_width}} | {header_2019:>{width_2019}} | {header_2021:>{width_2021}} |"
-    )
-    print(line)
-
-    for party in all_parties:
-        seats_2019 = party_wins_2019.get(party, 0)
-        seats_2021 = party_wins_2021.get(party, 0)
-        print(
-            f"| {party:<{party_width}} | {seats_2019:>{width_2019}} | {seats_2021:>{width_2021}} |"
-        )
-
-    print(line)
+    print("+------------------------+------------+------------+")
 
 
 def main():
     if len(sys.argv) != 2:
         print("Usage: python election_winner_final.py <province>")
-        print("Example: python election_winner_final.py Quebec")
         sys.exit(1)
 
-    province_input = sys.argv[1]
-    lookup = build_province_lookup(FILE_2019)
-    province = resolve_province(province_input, lookup)
+    province = sys.argv[1]
 
-    if province is None:
-        valid = sorted({v for v in lookup.values()})
-        print(f'Error: "{province_input}" is not a recognized province or territory.')
-        print("Valid options are:")
-        for name in valid:
-            print(f" - {name}")
+    wins_2019 = count_party_wins(FILE_2019, province)
+    wins_2021 = count_party_wins(FILE_2021, province)
+
+    if len(wins_2019) == 0 and len(wins_2021) == 0:
+        print("Province not found.")
         sys.exit(1)
 
-    wins_2019 = load_party_wins_by_province(FILE_2019, province)
-    wins_2021 = load_party_wins_by_province(FILE_2021, province)
+    winner_2019 = get_winner(wins_2019)
+    winner_2021 = get_winner(wins_2021)
 
-    winner_2019 = find_winner(wins_2019)
-    winner_2021 = find_winner(wins_2021)
+    print("\nProvince:", province)
+    print()
+    print_table(wins_2019, wins_2021)
 
-    print(f"\nProvince: {province}\n")
-    print_party_table(wins_2019, wins_2021)
-
-    print(f"\n2019 Winner: {winner_2019}")
-    print(f"2021 Winner: {winner_2021}")
+    print("\n2019 Winner:", winner_2019)
+    print("2021 Winner:", winner_2021)
 
     if winner_2019 == winner_2021:
-        print("\nResult: The winning party did NOT change.")
+        print("\nResult: The winning party remained the same.")
     else:
         print("\nResult: The winning party changed.")
 
