@@ -28,12 +28,10 @@ def fatal(msg):
     sys.exit(1)
 
 
-# Loads a CSV file and returns a list of dictionaries (rows)
 def load_csv(path):
     data = []
 
     try:
-        # Open file with UTF-8 encoding (handles Excel files properly)
         with open(path, newline="", encoding="utf-8-sig") as file:
             reader = csv.DictReader(file)
 
