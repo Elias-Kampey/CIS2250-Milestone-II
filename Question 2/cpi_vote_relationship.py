@@ -280,7 +280,7 @@ def write_output(filename, rows):
 # Main function controlling program execution
 def main(argv):
     if len(argv) != 1:
-        fatal("Usage: python summarize.py")
+        fatal("Usage: python3 cpi_vote_relationship.py")
 
     # Load election datasets
     election2019 = load_csv("data/43thelection.csv")
