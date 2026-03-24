@@ -77,7 +77,6 @@ def get_parties(election_data):
 
 
 # Converts raw election CSV data into structured dictionary:
-# { province: { party: votes } }
 def process_election_data(data, provinces):
     result = {}
 
