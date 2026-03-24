@@ -121,7 +121,6 @@ def create_plot(x_vals, y_vals, labels, party):
     # Plot points
     plt.scatter(x_vals, y_vals, c=colors, s=80)
 
-    # (Duplicate scatter - not necessary but harmless)
     plt.scatter(x_vals, y_vals)
 
     # Add reference lines at 0
@@ -140,7 +139,6 @@ def create_plot(x_vals, y_vals, labels, party):
     # Grid for readability
     plt.grid()
 
-    # Save image file (high quality)
     plt.savefig(f"{party}_scatter.png", dpi=300)
 
     # Display plot
