@@ -17,6 +17,7 @@ wins in that province.
 import csv
 import sys
 import unicodedata
+import matplotlib.pyplot as plt
 
 FILE_2019 = "data/election43_table11.csv"
 FILE_2021 = "data/election44_table11.csv"
@@ -79,19 +80,43 @@ def get_winner(party_wins):
     return winner
 
 
-def print_table(wins_2019, wins_2021):
+def show_table(wins_2019, wins_2021, province, winner_2019, winner_2021):
     parties = sorted(set(wins_2019.keys()) | set(wins_2021.keys()))
 
-    print("+------------------------+------------+------------+")
-    print("| Party                  | 2019 Seats | 2021 Seats |")
-    print("+------------------------+------------+------------+")
-
+    table_data = []
     for party in parties:
-        seats_2019 = wins_2019.get(party, 0)
-        seats_2021 = wins_2021.get(party, 0)
-        print(f"| {party:<22} | {seats_2019:>10} | {seats_2021:>10} |")
+        table_data.append([
+            party,
+            wins_2019.get(party, 0),
+            wins_2021.get(party, 0)
+        ])
 
-    print("+------------------------+------------+------------+")
+    columns = ["Party", "2019 Seats", "2021 Seats"]
+
+    fig, ax = plt.subplots(figsize=(8, 6))
+    ax.axis("off")
+
+    table = ax.table(
+        cellText=table_data,
+        colLabels=columns,
+        loc="center"
+    )
+
+    table.auto_set_font_size(False)
+    table.set_fontsize(12)
+    table.scale(1.2, 1.5)
+
+    changed_text = "The winning party changed."
+    if winner_2019 == winner_2021:
+        changed_text = "The winning party remained the same."
+
+    plt.title(f"Election Results - {province}", fontsize=18, pad=20)
+
+    plt.figtext(0.5, 0.83, f"2019 Winner: {winner_2019}", ha="center", fontsize=12)
+    plt.figtext(0.5, 0.79, f"2021 Winner: {winner_2021}", ha="center", fontsize=12)
+    plt.figtext(0.5, 0.75, f"Result: {changed_text}", ha="center", fontsize=12)
+
+    plt.show()
 
 
 def main():
@@ -113,7 +138,7 @@ def main():
 
     print("\nProvince:", province)
     print()
-    print_table(wins_2019, wins_2021)
+    show_table(wins_2019, wins_2021, province, winner_2019, winner_2021)
 
     print("\n2019 Winner:", winner_2019)
     print("2021 Winner:", winner_2021)
